@@ -1,5 +1,5 @@
 CC      = /usr/bin/cc
-CFLAGS  = -std=c11 -Wall
+CFLAGS  = -std=c99 -Wall
 LDFLAGS = 
 
 SRCDIR = src
