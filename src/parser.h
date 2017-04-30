@@ -1,6 +1,12 @@
 /*
  * parser.h
  *
+ * Simple LL(1) parser with the following grammar:
+ *  Program    := Statement Program | NULL
+ *  Statement  := Assignment | Loop
+ *  Assignment := VarID ':=' VarID '+' NatNum | VarID ':=' VarID '-' NatNum
+ *  Loop       := 'LOOP' VarID 'DO' Program 'END'
+ *
  * Tom René Hennig
  */
 
@@ -10,6 +16,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+
+/******************************************************************************
+ *                             TYPE DECLARATIONS
+ */
+
 /*
  * Declaration of primitive types
  */
@@ -18,7 +29,7 @@ typedef long VarID;
 typedef long NatNum;
 
 /*
- * Rules of the CFG
+ * Rules of the CFG listed at the beginning of this file
  */
 typedef enum {
     STAT_ASSIGNMENT,
@@ -48,6 +59,16 @@ typedef struct {
 } Loop;
 
 
+/******************************************************************************
+ *                            FUNCTION DECLARATIONS
+ */
+
+/*
+ * Parse input from stream with the help of the lexer into an AST of the
+ * structure as shown above.
+ * ARGS     stream - libc standard stream
+ * RETURN   pointer to the first executable program statement/the AST.
+ */
 Program *parse(FILE *stream);
 
 #endif /* PARSER_H */

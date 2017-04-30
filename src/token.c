@@ -1,7 +1,13 @@
 /*
  * token.c
  *
+ * Simple lexer reading character by character and natural numbers.
+ *
  * Tom René Hennig
+ */
+
+/******************************************************************************
+ *                              INCLUDE SECTION
  */
 
 #include <ctype.h>
@@ -11,25 +17,46 @@
 #include "token.h"
 
 
-static Token buf;
-static bool bufUsed = false;
+/******************************************************************************
+ *                            GLOBAL DECLARATIONS
+ */
+
+static Token buf;               // Buffer for returned tokens in token stream
+static bool bufUsed = false;    // used-flag for token buffer
 
 
+/******************************************************************************
+ *                           FUNCTION DEFINITIONS
+ */
+
+/*
+ * Read next token from given input stream.
+ * ARGUMENTS    stream - input stream (libc)
+ * RETURN       token read from input stream with type attribute is guaranteed
+ *              to contain reasonable value
+ */
 Token nextToken(FILE *stream)
 {
+    // input check
+    if (stream == NULL) {
+        fprintf(stderr, "ERROR: invalid stream to read from\n");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Return buffer content if buffer is used and reset used-flag
     if (bufUsed) {
         bufUsed = false;
         return buf;
     }
     
-    // skip leading blanks
+    // Skip leading blanks and whitespace characters
     int c = fgetc(stream);
     while (isspace(c) && c != EOF)
         c = fgetc(stream);
     
     Token tok;
     switch (c) {
-    case 'x': // variable identifier, read number
+    case 'x':       // beginning variable identifier, read identifier number
         tok.type = TOK_VAR_ID;
         tok.value = 0;
         while (isdigit(c = fgetc(stream))) {
@@ -38,8 +65,8 @@ Token nextToken(FILE *stream)
         }
         ungetc(c, stream);
         break;
-    case '0': case '1': case '2': case '3': case '4':
-    case '5': case '6': case '7': case '8': case '9':
+    case '0': case '1': case '2': case '3': case '4':   // beginning natural
+    case '5': case '6': case '7': case '8': case '9':   // number
         tok.type = TOK_NAT_NUM;
         tok.value = c - '0';
         while (isdigit(c = fgetc(stream))) {
@@ -48,7 +75,7 @@ Token nextToken(FILE *stream)
         }
         ungetc(c, stream);
         break;
-    case ':':
+    case ':':       // beginning assignment operator
         if ((c = fgetc(stream)) != '=') {
             tok.type = TOK_INVALID;
             tok.value = c;
@@ -56,16 +83,16 @@ Token nextToken(FILE *stream)
         }
         tok.type = TOK_ASS;
         break;
-    case '+':
+    case '+':       // plus operator
         tok.type = TOK_PLUS;
         break;
-    case '-':
+    case '-':       // minus operator
         tok.type = TOK_MINUS;
         break;
-    case ';':
+    case ';':       // semicolon
         tok.type = TOK_SEM;
         break;
-    case 'L':
+    case 'L':       // beginning keyword 'LOOP'
         if ((c = fgetc(stream)) != 'O') {
             tok.type = TOK_INVALID;
             tok.value = c;
@@ -83,7 +110,7 @@ Token nextToken(FILE *stream)
         }
         tok.type = TOK_LOOP;
         break;
-    case 'D':
+    case 'D':       // beginning keyword 'DO'
         if ((c = fgetc(stream)) != 'O') {
             tok.type = TOK_INVALID;
             tok.value = c;
@@ -91,7 +118,7 @@ Token nextToken(FILE *stream)
         }
         tok.type = TOK_DO;
         break;
-    case 'E':
+    case 'E':       // beginning keyword 'END'
         if ((c = fgetc(stream)) != 'N') {
             tok.type = TOK_INVALID;
             tok.value = c;
@@ -104,10 +131,10 @@ Token nextToken(FILE *stream)
         }
         tok.type = TOK_END;
         break;
-    case EOF:
+    case EOF:       // reached end of file
         tok.type = TOK_EOF;
         break;
-    default:
+    default:        // found invalid character
         tok.type = TOK_INVALID;
         tok.value = c;
         break;
@@ -115,6 +142,11 @@ Token nextToken(FILE *stream)
     return tok;
 }
 
+/*
+ * Write token to buffer, if possible.
+ * ARGUMENTS    tok - token to be pushed into buffer
+ * RETURN       return on success, exit on filled buffer
+ */
 void pushToken(Token tok)
 {
     if (bufUsed) {
@@ -125,8 +157,20 @@ void pushToken(Token tok)
     bufUsed = true;
 }
 
+/*
+ * Print human readable represantation of token to stream.
+ * ARGUMENTS    stream - output file stream
+ *              tok    - token to be printed (at least type is printed)
+ * RETURN       always returns
+ */
 void printToken(FILE* stream, Token tok)
 {
+    // input check
+    if (stream == NULL) {
+        fprintf(stderr, "ERROR: invalid stream to print to\n");
+        exit(EXIT_FAILURE);
+    }
+    
     switch (tok.type) {
     case TOK_VAR_ID:
         fprintf(stream, "variable identifier x%ld", tok.value);
