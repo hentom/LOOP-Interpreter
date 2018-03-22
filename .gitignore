@@ -35,3 +35,6 @@ loop
 
 # LOOP programs
 *.loop
+
+# Build directory
+build
