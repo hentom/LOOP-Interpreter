@@ -33,8 +33,5 @@ loop
 *.dSYM/
 *.su
 
-# LOOP programs
-*.loop
-
 # Build directory
 build
